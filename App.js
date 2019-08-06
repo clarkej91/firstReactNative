@@ -19,6 +19,7 @@ import {
   Button,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 
 import {
@@ -34,6 +35,8 @@ import {
 
 export default class App extends React.Component {
   state = {
+    loading: true,
+    posts: [],
     message: 'I am state',
     countries: [
     { name: "Australia", imageSrc: "https://play.nativescript.org/dist/assets/img/flags/au.png" },
@@ -66,6 +69,18 @@ export default class App extends React.Component {
     console.log(item.name)
   }
 
+  componentDidMount() {
+    fetch('https://reddit.com/r/aww.json?raw_json=1')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data.data.children)
+        this.setState({
+          loading: false,
+          posts: data.data.children
+        });
+      });
+  }
+
   render() {
     return (
       <View style={styles.container}>
@@ -82,21 +97,24 @@ export default class App extends React.Component {
           title="My Button"
           color="#841584"
         />
+        {this.state.loading &&
+        <ActivityIndicator size="large" color="#0000ff" />
+        }
         <FlatList
         ItemSeparatorComponent={() =>
           <View
             style={{ height: 1, width: '100%', backgroundColor: 'lightgray'}}
             />
           }
-          data={this.state.countries}
-          keyExtractor={item => item.name}
+          data={this.state.posts}
+          keyExtractor={item => item.data.id}
           renderItem={({item}) =>
           <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', padding: 10}}
           onPress={() => this.handleListTap(item)}
           >
-          <Image source={{uri: item.imageSrc}}
+          <Image source={{uri: item.data.thumbnail}}
          style={{width: 50, height: 50, borderRadius: 25}} />
-            <Text style={{ padding: 10 }}>{item.name}</Text>
+            <Text style={{ padding: 10 }}>{item.data.title}</Text>
           </TouchableOpacity>
         }
         />
